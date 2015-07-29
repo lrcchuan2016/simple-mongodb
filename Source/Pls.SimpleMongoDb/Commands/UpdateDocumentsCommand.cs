@@ -21,7 +21,12 @@ namespace Pls.SimpleMongoDb.Commands
         /// missing document and/or multiple matches. See
         /// <see cref="UpdateModes"/> for more info.
         /// </summary>
-        public UpdateModes Mode { get; set; }
+        public UpdateModes Mode { get; set; } // db.version() TODO: modify for version >2.6.
+        // db.version() TODO: modify for version >2.6.
+        //http://docs.mongodb.org/manual/reference/method/db.collection.update/
+        //public bool upsert;
+        //public bool multi;
+        //public bool writeConcern;
 
         /// <summary>
         /// Defines the query object that is used to
@@ -71,7 +76,7 @@ namespace Pls.SimpleMongoDb.Commands
                 writer.Write(0);
                 writer.Write(FullCollectionName);
                 writer.WriteTerminator();
-                writer.Write((int)Mode);
+                writer.Write((int)Mode);// db.version() TODO: modify for version >2.6.
                 writer.WriteSelector(QuerySelector ?? new object());
                 writer.WriteDocument(Document);
 

@@ -122,7 +122,7 @@ namespace Pls.SimpleMongoDb
         public T FindOne<T>(object selector, object schema = null)
             where T : class
         {
-            var result = Find<T>(selector, schema: schema);
+            var result = Find<T>(selector, schema: schema, limit: 1);
 
             return result.SingleOrDefault();
         }

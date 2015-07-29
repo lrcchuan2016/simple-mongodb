@@ -23,11 +23,14 @@ namespace Pls.SimpleMongoDb.Serialization
             //using (var reader = new BsonReader(_documentStream))
             //{
             var reader = new BsonReader(_documentStream);
-
+    
             if (typeof(T) == typeof(string))
             {
                 object x = _jsonSerializer.Deserialize(reader);
-                document = JsonConvert.SerializeObject(x) as T;
+                StringWriter sw = new StringWriter();
+                _jsonSerializer.Serialize(sw, x);
+                document = sw.ToString() as T;
+                //document = JsonConvert.SerializeObject(x) as T;
             }
             else
             {

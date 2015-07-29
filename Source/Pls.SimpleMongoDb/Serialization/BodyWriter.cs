@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using Pls.SimpleMongoDb.DataTypes;
 using Pls.SimpleMongoDb.Querying;
+using System.Collections.Generic;
 
 namespace Pls.SimpleMongoDb.Serialization
 {
@@ -105,7 +106,27 @@ namespace Pls.SimpleMongoDb.Serialization
 
         private void WriteJson(SimoJson json, ISimoBsonWriter writer)
         {
-            WriteAsBson(json.ToKeyValue(), writer);
+            var dval = json.ToKeyValue();
+            Dictionary<string, object> dvalTo = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, object> kv in dval)
+            {
+                if ((kv.Key == "_id" || kv.Key[0] == '!') && kv.Value.GetType() == typeof(string))
+                {
+                    string val = kv.Value as string;
+                    if (val.StartsWith("-oid-"))
+                    {
+                        val = val.Substring(5);
+                        byte[] nv = Convert.FromBase64String(val);
+
+                        dvalTo.Add(kv.Key.Substring(1), new Newtonsoft.Json.Bson.BsonObjectId(nv));
+                    }
+                }
+                else
+                {
+                    dvalTo.Add(kv.Key, kv.Value);
+                }
+            }
+            WriteAsBson(dvalTo, writer);
         }
 
         private void WriteAsBson(object value, ISimoBsonWriter writer)
