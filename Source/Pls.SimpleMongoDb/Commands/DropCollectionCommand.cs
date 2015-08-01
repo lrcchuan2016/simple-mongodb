@@ -17,8 +17,8 @@ namespace Pls.SimpleMongoDb.Commands
         /// </summary>
         public string CollectionName { get; set; }
 
-        public DropCollectionCommand(ISimoConnection connection)
-            : base(connection, null)
+        public DropCollectionCommand(ISimoConnection connection, Reconnection OnReconnect)
+            : base(connection, OnReconnect, null)
         {
         }
 

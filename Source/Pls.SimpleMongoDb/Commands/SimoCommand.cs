@@ -9,10 +9,14 @@ namespace Pls.SimpleMongoDb.Commands
     public abstract class SimoCommand
     {
         protected ISimoConnection Connection { get; set; }
+        public delegate void Reconnection(long currentNum);
+        protected Reconnection ReconnectionCallback;
+    
 
-        protected SimoCommand(ISimoConnection connection)
+        protected SimoCommand(ISimoConnection connection, Reconnection OnReconnect)
         {
             Connection = connection;
+            ReconnectionCallback = OnReconnect;
         }
 
         public void Execute()
@@ -25,7 +29,13 @@ namespace Pls.SimpleMongoDb.Commands
         private void EnsureOpenConnection()
         {
             if (!Connection.IsConnected)
-                Connection.Connect();
+            {
+                bool reconnection = Connection.Connect();
+                if (reconnection)
+                {
+                    ReconnectionCallback(Connection.ConnectionActs);
+                }
+            }
         }
 
         /// <summary>

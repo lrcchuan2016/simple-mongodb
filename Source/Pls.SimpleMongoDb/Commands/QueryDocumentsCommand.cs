@@ -53,8 +53,8 @@ namespace Pls.SimpleMongoDb.Commands
         /// </summary>
         public object DocumentSchema { get; set; }
 
-        public QueryDocumentsCommand(ISimoConnection connection)
-            : base(connection)
+        public QueryDocumentsCommand(ISimoConnection connection, Reconnection recCallback)
+            : base(connection, recCallback)
         {
             Options = QueryCommandOptions.None;
             NumberOfDocumentsToSkip = null;
@@ -85,30 +85,30 @@ namespace Pls.SimpleMongoDb.Commands
             //using (var stream = new MemoryStream())
             var stream = new MemoryStream();
             //{
-                using (var writer = new BodyWriter(stream))
-                {
-                    //Number of docs to return:
-                    //  0 => the server will use the default return size;
-                    // -x => If the number is negative, then the database will return that number and close the cursor.
-                    //  1 => the server will treat it as -1 (closing the cursor automatically)
+            using (var writer = new BodyWriter(stream))
+            {
+                //Number of docs to return:
+                //  0 => the server will use the default return size;
+                // -x => If the number is negative, then the database will return that number and close the cursor.
+                //  1 => the server will treat it as -1 (closing the cursor automatically)
 
-                    var numOfDocsToReturn = NumberOfDocumentsToReturn ?? 0;
-                    if (numOfDocsToReturn > 0)
-                        numOfDocsToReturn = numOfDocsToReturn*-1;
+                var numOfDocsToReturn = NumberOfDocumentsToReturn ?? 0;
+                if (numOfDocsToReturn > 0)
+                    numOfDocsToReturn = numOfDocsToReturn * -1;
 
-                    writer.Write((int)Options);
-                    writer.Write(FullCollectionName);
-                    writer.WriteTerminator();
-                    writer.Write(NumberOfDocumentsToSkip ?? 0);
-                    writer.Write(numOfDocsToReturn);
-                    
-                    writer.WriteSelector(QuerySelector ?? new object());
-                    
-                    if(DocumentSchema != null)
-                        writer.WriteDocument(DocumentSchema);
+                writer.Write((int)Options);
+                writer.Write(FullCollectionName);
+                writer.WriteTerminator();
+                writer.Write(NumberOfDocumentsToSkip ?? 0);
+                writer.Write(numOfDocsToReturn);
 
-                    return stream.ToArray();
-                }
+                writer.WriteSelector(QuerySelector ?? new object());
+
+                if (DocumentSchema != null)
+                    writer.WriteDocument(DocumentSchema);
+
+                return stream.ToArray();
+            }
             //}
         }
     }

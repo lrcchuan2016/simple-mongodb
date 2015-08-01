@@ -24,8 +24,8 @@ namespace Pls.SimpleMongoDb.Commands
         /// <remarks>Needs to be convertible to BSON.</remarks>
         public IList<object> Documents { get; set; }
 
-        public InsertDocumentsCommand(ISimoConnection connection)
-            : base(connection)
+        public InsertDocumentsCommand(ISimoConnection connection, Reconnection recCallback)
+            : base(connection, recCallback)
         {
         }
 
@@ -37,8 +37,9 @@ namespace Pls.SimpleMongoDb.Commands
 
         protected override void OnRequestSent()
         {
+            // TODO: this is not necessary, optionally with writeConcern/ fireAndForget tactic
             var dbName = SimoHelper.GetDatabaseName(FullCollectionName);
-            var cmd = new GetLastErrorCommand(Connection) { DatabaseName = dbName };
+            var cmd = new GetLastErrorCommand(Connection, (NumReconnections) => { }) { DatabaseName = dbName };
             cmd.Execute();
 
             if (cmd.Response.IsEmpty)

@@ -23,8 +23,8 @@ namespace Pls.SimpleMongoDb.Commands
         /// <remarks>Needs to be convertible to BSON.</remarks>
         public object Selector { get; set; }
 
-        public DeleteDocumentsCommand(ISimoConnection connection)
-            : base(connection)
+        public DeleteDocumentsCommand(ISimoConnection connection, Reconnection recCallback)
+            : base(connection, recCallback)
         {
         }
 

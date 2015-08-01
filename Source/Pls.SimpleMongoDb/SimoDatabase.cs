@@ -10,6 +10,9 @@ namespace Pls.SimpleMongoDb
     public class SimoDatabase
         : ISimoDatabase
     {
+        protected string auth_user;
+        protected string auth_pwd;
+
         public ISimoSession Session { get; private set; }
 
         public string Name { get; private set; }
@@ -24,6 +27,17 @@ namespace Pls.SimpleMongoDb
             Session = session;
             Name = name;
         }
+        public void ConnectionLost_Stateless(long lostnum)
+        {
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine("MONGO DB DRIVER `DB LVL COMMAND` stateless reconnection num#" + lostnum);
+#endif
+            if (this.Authorised)
+            {
+                // authorisation in prev connection lost too
+                this.AutoriseOnLostConnection();
+            }
+        }
         private string CalculateMD5Hash(string input)
         {
             var md5 = MD5.Create();
@@ -33,24 +47,44 @@ namespace Pls.SimpleMongoDb
         public void Autorise(string user, string pwd)
         {
             ISimoConnection conO = Session.Connection;
-            var cmd = new GetNonceCommand(conO) { DatabaseName = Name };
+            var cmd = new GetNonceCommand(conO, 
+                (Number_rec) =>
+                {
+                    // TODO: stop command execution, new nonce, attemptsNumber
+                }) 
+                { DatabaseName = Name };
             cmd.Execute();
 
             string nonce = cmd.Response.Documents[0]["nonce"] as string;
-            
+
             string key = user + ":mongo:" + pwd;
-            var cmdAuth = new AuthenticateCommand(conO, 
-                user, 
-                CalculateMD5Hash(nonce + user + CalculateMD5Hash(key)), 
-                nonce) 
-                { DatabaseName = Name };
+            var cmdAuth = new AuthenticateCommand(conO,
+                (Number_rec) =>
+                {
+                    // TODO: stop command execution, new nonce, attemptsNumber
+                },
+                user,
+                CalculateMD5Hash(nonce + user + CalculateMD5Hash(key)),
+                nonce) { DatabaseName = Name };
             cmdAuth.Execute();
+
+            auth_user = user;
+            auth_pwd = pwd;
+
+            Authorised = true;
 
             var resl = cmdAuth.Response.Documents;
         }
+
+        public void AutoriseOnLostConnection()
+        {
+            Autorise(auth_user, auth_pwd);
+        }
+
+        public bool Authorised { get; private set; }
         public void DropDatabase()
         {
-            var cmd = new DropDatabaseCommand(Session.Connection) { DatabaseName = Name };
+            var cmd = new DropDatabaseCommand(Session.Connection, ConnectionLost_Stateless) { DatabaseName = Name };
             cmd.Execute();
         }
 
@@ -67,7 +101,7 @@ namespace Pls.SimpleMongoDb
             var fullCollectionNamePrefix = Name + ".";
             var prefixLen = fullCollectionNamePrefix.Length;
 
-            var cmd = new DropCollectionCommand(Session.Connection) { DatabaseName = Name };
+            var cmd = new DropCollectionCommand(Session.Connection, ConnectionLost_Stateless) { DatabaseName = Name };
 
             foreach (var collectionName in collectionNamesToDrop)
             {
@@ -90,7 +124,7 @@ namespace Pls.SimpleMongoDb
 
         public IList<string> GetCollectionNames(bool incluceSystemCollections = false)
         {
-            var cmd = new QueryDocumentsCommand<SimoKeyValues>(Session.Connection)
+            var cmd = new QueryDocumentsCommand<SimoKeyValues>(Session.Connection, (Number_rec) => { })
             {
                 FullCollectionName = Name + ".system.namespaces"
             };
@@ -129,5 +163,7 @@ namespace Pls.SimpleMongoDb
         {
             return new SimoCollection(this, name);
         }
+
+
     }
 }

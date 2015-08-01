@@ -118,7 +118,7 @@ namespace Pls.SimpleMongoDb.Serialization
                         val = val.Substring(5);
                         byte[] nv = Convert.FromBase64String(val);
 
-                        dvalTo.Add(kv.Key.Substring(1), new Newtonsoft.Json.Bson.BsonObjectId(nv));
+                        dvalTo.Add((kv.Key[0] == '!') ? kv.Key.Substring(1) : "_id", new Newtonsoft.Json.Bson.BsonObjectId(nv));
                     }
                 }
                 else

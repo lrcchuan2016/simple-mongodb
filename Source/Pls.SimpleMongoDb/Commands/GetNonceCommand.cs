@@ -13,8 +13,8 @@ namespace Pls.SimpleMongoDb.Commands
             set { NodeName = value; }
         }
 
-        public GetNonceCommand(ISimoConnection connection)
-            : base(connection, new { getnonce = 1.0 })
+        public GetNonceCommand(ISimoConnection connection, Reconnection OnReconnect)
+            : base(connection, OnReconnect, new { getnonce = 1.0 })
         {
         }
     }

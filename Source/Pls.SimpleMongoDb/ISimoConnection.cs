@@ -8,7 +8,9 @@ namespace Pls.SimpleMongoDb
     {
         ISimoConnectionInfo SimoConnectionInfo { get; }
         bool IsConnected { get; }
-        void Connect();
+        long ConnectionActs { get; }
+
+        bool Connect();
         void Disconnect();
         Stream GetPipeStream();
     }

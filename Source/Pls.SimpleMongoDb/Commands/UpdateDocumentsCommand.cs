@@ -1,6 +1,7 @@
 using System.IO;
 using Pls.SimpleMongoDb.Resources;
 using Pls.SimpleMongoDb.Serialization;
+using Pls.SimpleMongoDb.DataTypes;
 
 namespace Pls.SimpleMongoDb.Commands
 {
@@ -8,6 +9,7 @@ namespace Pls.SimpleMongoDb.Commands
     /// Used to update documents.
     /// </summary>
     public class UpdateDocumentsCommand
+        //:SimoResponseCommand<SimoKeyValues> TODO: modify for version >2.6.
         : SimoCommand
     {
         /// <summary>
@@ -42,8 +44,8 @@ namespace Pls.SimpleMongoDb.Commands
         /// <remarks>Needs to be convertible to BSON.</remarks>
         public object Document { get; set; }
 
-        public UpdateDocumentsCommand(ISimoConnection connection)
-            : base(connection)
+        public UpdateDocumentsCommand(ISimoConnection connection, Reconnection recCallback)
+            : base(connection, recCallback)
         {
             Mode = UpdateModes.Upsert;
         }
@@ -84,5 +86,23 @@ namespace Pls.SimpleMongoDb.Commands
             }
             //}
         }
+        //protected override void OnReadResponse(ResponseStreamReader responseStreamReader)
+        //{
+        //    var response = responseStreamReader.Read<SimoKeyValues>();
+        //    var document = response.ReturnedDocuments[0];
+        //    //var commandWasOk = document.GetDouble("ok") == 1.0;
+
+        //    //if (commandWasOk)
+        //    //{
+        //    //    this.Response.SetDocuments(response.ReturnedDocuments);
+        //    //    return;
+        //    //}
+
+        //    var errMsg = MongoDbErrorMessage.FromDocument(document);
+        //    if (errMsg == null)
+        //        return;
+
+        //    throw new SimoCommandException(ExceptionMessages.DatabaseCommand_CommandWasNotOk, errMsg);
+        //}
     }
 }

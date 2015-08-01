@@ -12,8 +12,8 @@ namespace Pls.SimpleMongoDb.Commands
             set { NodeName = value; }
         }
 
-        public DropDatabaseCommand(ISimoConnection connection)
-            : base(connection, new { dropDatabase = 1.0 })
+        public DropDatabaseCommand(ISimoConnection connection, Reconnection OnReconnect)
+            : base(connection, OnReconnect, new { dropDatabase = 1.0 })
         {
         }
     }

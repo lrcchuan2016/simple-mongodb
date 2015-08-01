@@ -17,8 +17,8 @@ namespace Pls.SimpleMongoDb.Commands
 
         public SimoCommandResponse<TDocument> Response { get; private set; }
 
-        protected SimoResponseCommand(ISimoConnection connection)
-            : base(connection)
+        protected SimoResponseCommand(ISimoConnection connection, Reconnection recCallback)
+            : base(connection, recCallback)
         {
             InitializeResponse();
         }
@@ -69,11 +69,17 @@ namespace Pls.SimpleMongoDb.Commands
             }
 
             GetMoreCommand<TDocument> getMoreCommand = null;
-
+   
             while (requestResponse.CursorExists)
             {
                 if (getMoreCommand == null)
-                    getMoreCommand = new GetMoreCommand<TDocument>(Connection, requestResponse.CursorId.Value, requestResponse.NumberOfReturnedDocuments.Value) { FullCollectionName = NodeName };
+                    getMoreCommand = new GetMoreCommand<TDocument>(Connection,
+                        (NumReconnections) =>
+                        {
+                            // TODO: check what cursorid is on server, before use stateless collection callback
+                            base.ReconnectionCallback(NumReconnections);
+                        },
+                        requestResponse.CursorId.Value, requestResponse.NumberOfReturnedDocuments.Value) { FullCollectionName = NodeName };
 
                 getMoreCommand.Execute();
 

@@ -26,7 +26,17 @@ namespace Pls.SimpleMongoDb
         {
             Database.DropCollections(Name);
         }
-
+        public void ConnectionLost_Stateless(long lostnum)
+        {
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine("MONGO DB DRIVER `COLLECTION LVL COMMAND` stateless reconnection num#" + lostnum);
+#endif
+            if (Database.Authorised)
+            {
+                // authorisation in prev connection lost too
+                Database.AutoriseOnLostConnection();
+            }
+        }
         public void Insert(object document)
         {
             Insert(new[] { document });
@@ -34,7 +44,7 @@ namespace Pls.SimpleMongoDb
 
         public void Insert(IEnumerable<object> documents)
         {
-            var cmd = new InsertDocumentsCommand(Database.Session.Connection)
+            var cmd = new InsertDocumentsCommand(Database.Session.Connection, ConnectionLost_Stateless)
                           {
                               Documents = documents.ToList(),
                               FullCollectionName = FullCollectionName
@@ -44,7 +54,7 @@ namespace Pls.SimpleMongoDb
 
         public void Update(object selector, object document)
         {
-            var cmd = new UpdateDocumentsCommand(Database.Session.Connection)
+            var cmd = new UpdateDocumentsCommand(Database.Session.Connection, ConnectionLost_Stateless)
                       {
                           Mode = UpdateModes.Upsert,
                           FullCollectionName = FullCollectionName,
@@ -56,7 +66,7 @@ namespace Pls.SimpleMongoDb
 
         public void UpdateMany(object selector, object document)
         {
-            var cmd = new UpdateDocumentsCommand(Database.Session.Connection)
+            var cmd = new UpdateDocumentsCommand(Database.Session.Connection, ConnectionLost_Stateless)
             {
                 Mode = UpdateModes.MultiUpdate,
                 FullCollectionName = FullCollectionName,
@@ -68,7 +78,7 @@ namespace Pls.SimpleMongoDb
 
         public void Delete(object selector)
         {
-            var cmd = new DeleteDocumentsCommand(Database.Session.Connection)
+            var cmd = new DeleteDocumentsCommand(Database.Session.Connection, ConnectionLost_Stateless)
                           {
                               Selector = selector,
                               FullCollectionName = FullCollectionName
@@ -91,13 +101,13 @@ namespace Pls.SimpleMongoDb
         public IList<T> Find<T>(object selector = null, object schema = null, int? limit = null, int? skip = null)
             where T : class
         {
-            var cmd = new QueryDocumentsCommand<T>(Database.Session.Connection)
+            var cmd = new QueryDocumentsCommand<T>(Database.Session.Connection, ConnectionLost_Stateless)
                           {
                               FullCollectionName = FullCollectionName,
                               QuerySelector = selector,
                               DocumentSchema = schema,
                               NumberOfDocumentsToSkip = skip,
-                              NumberOfDocumentsToReturn =  limit
+                              NumberOfDocumentsToReturn = limit
                           };
             cmd.Execute();
 
@@ -107,7 +117,7 @@ namespace Pls.SimpleMongoDb
         public IList<T> FindInfered<T>(T inferedTemplate, object selector = null, int? limit = null, int? skip = null)
             where T : class
         {
-            var cmd = new QueryDocumentsCommand<T>(Database.Session.Connection)
+            var cmd = new QueryDocumentsCommand<T>(Database.Session.Connection, ConnectionLost_Stateless)
             {
                 FullCollectionName = FullCollectionName,
                 QuerySelector = selector,

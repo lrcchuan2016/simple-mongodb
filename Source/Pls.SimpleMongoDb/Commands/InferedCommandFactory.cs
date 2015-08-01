@@ -10,7 +10,7 @@
         public QueryDocumentsCommand<TDocumentInfered> CreateInfered<TDocumentInfered>(ISimoConnection connection, TDocumentInfered inferedTemplate)
             where TDocumentInfered : class
         {
-            return new QueryDocumentsCommand<TDocumentInfered>(connection);
+            return new QueryDocumentsCommand<TDocumentInfered>(connection, (NumReconnections) => { });
         }
     }
 }

@@ -19,6 +19,7 @@ namespace Pls.SimpleMongoDb
 
         public ISimoConnectionInfo SimoConnectionInfo { get; private set; }
         public bool IsConnected { get { return _socket != null && _socket.Connected; } }
+        public long ConnectionActs { get; private set; }
 
         public SimoConnection(ISimoConnectionInfo simoConnectionInfo)
         {
@@ -59,16 +60,22 @@ namespace Pls.SimpleMongoDb
 
         #endregion
 
-        public void Connect()
+        public bool Connect()
         {
             lock (_lockSocket)
             {
+                bool recon = ConnectionActs > 0;
+
                 if (IsConnected)
                     throw new SimoCommunicationException(ExceptionMessages.MongoConnection_AllreadyEstablished);
 
                 _socket = new TcpClient();
                 _socket.Connect(SimoConnectionInfo.Host, SimoConnectionInfo.Port);
+ 
                 DNDS = _socket.GetStream();
+                ConnectionActs++;
+
+                return recon;
             }
         }
 

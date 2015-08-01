@@ -19,8 +19,8 @@ namespace Pls.SimpleMongoDb.Commands
         /// </summary>
         protected object Command { get; set; }
 
-        protected DatabaseCommand(ISimoConnection connection, object command)
-            : base(connection)
+        protected DatabaseCommand(ISimoConnection connection, Reconnection recCallback, object command)
+            : base(connection, recCallback)
         {
             Command = command;
         }

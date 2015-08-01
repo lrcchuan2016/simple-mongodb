@@ -13,8 +13,8 @@ namespace Pls.SimpleMongoDb.Commands
             set { NodeName = value; }
         }
 
-        public GetLastErrorCommand(ISimoConnection connection)
-            : base(connection, new { getlasterror = 1.0 })
+        public GetLastErrorCommand(ISimoConnection connection, Reconnection OnReconnect)
+            : base(connection, OnReconnect, new { getlasterror = 1.0 })
         {
         }
     }

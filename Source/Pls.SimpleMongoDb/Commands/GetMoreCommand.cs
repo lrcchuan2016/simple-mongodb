@@ -56,8 +56,8 @@ namespace Pls.SimpleMongoDb.Commands
         /// </summary>
         public int NumberOfDocumentsToReturn { get; private set; }
 
-        public GetMoreCommand(ISimoConnection connection, long cursorId, int numberOfDocumentsToReturn)
-            : base(connection)
+        public GetMoreCommand(ISimoConnection connection, Reconnection recCallback, long cursorId, int numberOfDocumentsToReturn)
+            : base(connection, recCallback)
         {
             InitialCursorId = cursorId;
             NumberOfDocumentsToReturn = numberOfDocumentsToReturn;

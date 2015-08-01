@@ -19,12 +19,14 @@ namespace Pls.SimpleMongoDb.Commands
         /// <param name="UserName"></param>
         /// <param name="KeyDigest"></param>
         /// <param name="nonce"></param>
-        public AuthenticateCommand(ISimoConnection connection, string UserName, string KeyDigest, string nonce)
-            : base(connection, new { 
-                authenticate = 1.0, 
-                user = UserName, 
-                nonce = nonce, 
-                key = KeyDigest })
+        public AuthenticateCommand(ISimoConnection connection, Reconnection recCallback, string UserName, string KeyDigest, string nonce)
+            : base(connection, recCallback, new
+            {
+                authenticate = 1.0,
+                user = UserName,
+                nonce = nonce,
+                key = KeyDigest
+            })
         {
         }
     }

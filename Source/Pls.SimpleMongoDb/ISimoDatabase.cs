@@ -6,9 +6,11 @@ namespace Pls.SimpleMongoDb
     {
         ISimoSession Session { get; }
         string Name { get; }
+        void Autorise(string user, string pwd);
+        void AutoriseOnLostConnection();
 
         ISimoCollection this[string name] { get; }
-
+        bool Authorised { get; }
         void DropDatabase();
         void DropCollections(params string[] collectionNames);
 
