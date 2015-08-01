@@ -18,7 +18,25 @@ namespace Pls.SimpleMongoDb
         private TcpClient _socket;
 
         public ISimoConnectionInfo SimoConnectionInfo { get; private set; }
-        public bool IsConnected { get { return _socket != null && _socket.Connected; } }
+        
+        DateTime socketOpenTime;
+        //http://docs.mongodb.org/manual/faq/diagnostics/#does-tcp-keepalive-time-affect-mongodb-deployments
+        // ~5minutes
+        const int maxkeepAlive = 290;
+        public bool IsConnected
+        {
+            get
+            {
+                TimeSpan tsl = DateTime.Now - socketOpenTime;
+                if (tsl.TotalSeconds > maxkeepAlive)// this will prevent many errors
+                {
+                    Disconnect();// anyway mongodb will disconnect us
+                    return false;
+                }
+
+                return _socket != null && _socket.Connected;
+            }
+        }
         public long ConnectionActs { get; private set; }
 
         public SimoConnection(ISimoConnectionInfo simoConnectionInfo)
@@ -66,13 +84,15 @@ namespace Pls.SimpleMongoDb
             {
                 bool recon = ConnectionActs > 0;
 
-                if (IsConnected)
+                if (_socket != null && _socket.Connected)
                     throw new SimoCommunicationException(ExceptionMessages.MongoConnection_AllreadyEstablished);
 
                 _socket = new TcpClient();
                 _socket.Connect(SimoConnectionInfo.Host, SimoConnectionInfo.Port);
  
                 DNDS = _socket.GetStream();
+
+                socketOpenTime = DateTime.Now;
                 ConnectionActs++;
 
                 return recon;
@@ -93,12 +113,13 @@ namespace Pls.SimpleMongoDb
             }
         }
         Stream DNDS = null;
+
         public Stream GetPipeStream()
         {
             if (!IsConnected)
                 throw new SimoCommunicationException(ExceptionMessages.MongoConnection_NoPipestreamWhileDisconnected);
 
-            //return _socket.GetStream()
+
             return DNDS;
         }
     }

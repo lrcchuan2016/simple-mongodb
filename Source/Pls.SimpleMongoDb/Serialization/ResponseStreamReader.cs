@@ -66,7 +66,7 @@ namespace Pls.SimpleMongoDb.Serialization
         #endregion
 
         public Response<TDocument> Read<TDocument>()
-            where TDocument : class 
+            where TDocument : class
         {
             var response = new Response<TDocument>();
 
@@ -85,12 +85,12 @@ namespace Pls.SimpleMongoDb.Serialization
 
             //TODO: Verify response.ResponseTo against request.RequestID
 
-            if(!response.OpCode.HasValue)
+            if (!response.OpCode.HasValue)
                 throw new SimoCommunicationException(ExceptionMessages.ResponseReader_MissingOpCodeInResponse);
 
-            if(response.OpCode.Value != OpCodes.Reply)
+            if (response.OpCode.Value != OpCodes.Reply)
                 throw new SimoCommunicationException(string.Format(
-                    ExceptionMessages.ResponseReader_WrongOpCodeInResponse, 
+                    ExceptionMessages.ResponseReader_WrongOpCodeInResponse,
                     OpCodes.Reply,
                     response.OpCode));
         }
@@ -98,11 +98,18 @@ namespace Pls.SimpleMongoDb.Serialization
         private void OnReadBody<TDocument>(Response<TDocument> response)
             where TDocument : class
         {
-            response.ResponseFlag = _reader.ReadInt32();
+            response.ResponseFlags = _reader.ReadInt32();
             response.CursorId = _reader.ReadInt64();
             response.StartingFrom = _reader.ReadInt32();
             response.NumberOfReturnedDocuments = _reader.ReadInt32();
 
+            if (response.ResponseFlag == eResponseFlag.QueryFailure)
+            {
+                // 1 doc with $err
+                var document = _documentReader.ReadDocument<Pls.SimpleMongoDb.DataTypes.SimoKeyValues>();
+                string errorstr = document.GetString("$err");
+                throw new Exception("QueryFailure response: " + errorstr + ";" + document.ToString());
+            }
             var returnedDocuments = new List<TDocument>();
 
             for (var i = 0; i < response.NumberOfReturnedDocuments.Value; i++)

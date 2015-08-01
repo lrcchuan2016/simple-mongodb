@@ -4,6 +4,15 @@ using Pls.SimpleMongoDb.Commands;
 
 namespace Pls.SimpleMongoDb.Serialization
 {
+    public enum eResponseFlag : int
+    {
+        undefined = -1,
+        CursorNotFound = 0,//0
+        QueryFailure,//1
+        ShardConfigStale,//2
+        AwaitCapable,//3
+        Reserved//4-31
+    }
     /// <summary>
     /// Represents a response that is returned by the server.
     /// All commands does not generate a response.
@@ -35,8 +44,36 @@ namespace Pls.SimpleMongoDb.Serialization
         /// </summary>
         public OpCodes? OpCode { get; set; }
 
-        public int? ResponseFlag { get; set; }
+        public int? ResponseFlags { get; set; }
 
+        public eResponseFlag ResponseFlag
+        {
+            get
+            {
+                if (!ResponseFlags.HasValue)
+                    return eResponseFlag.undefined;
+
+                string s = Convert.ToString(ResponseFlags.Value, 2);
+                if (BitConverter.IsLittleEndian)
+                {
+                    char[] charArray = s.ToCharArray();
+                    Array.Reverse(charArray);
+                    s = new string(charArray);
+                }
+                eResponseFlag result = eResponseFlag.undefined;
+
+                for (int i = 0; i < s.Length; i++)
+                {
+                    if (s[i] == '1')
+                    {
+                        result = (eResponseFlag)i;
+                        break;
+                    }
+                }
+
+                return result;
+            }
+        }
         public long? CursorId { get; set; }
 
         public int? StartingFrom { get; set; }
